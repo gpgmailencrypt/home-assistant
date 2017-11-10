@@ -140,5 +140,5 @@ class CalDAVCalendarData(object):
                     items.append(self.__convert_vevent(e))
 
         items=sorted(items, key=lambda i: i["start"]['dateTime'] if 'dateTime' in i["start"] else i["start"]['date'])
-        self.event = items[0] if len(items) == 1 else None
+        self.event = items[0] if len(items) >= 1 else None
         return True
