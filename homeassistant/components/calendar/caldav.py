@@ -147,8 +147,9 @@ class CalDAVCalendarData(object):
 
            for e in items[1:]:
 
-               if ((e["start"]['dateTime'] < self.event["end"]['dateTime'])
+               if ((e["start"]['dateTime'] <= self.event["end"]['dateTime'])
                and (e["end"]['dateTime'] > self.event["end"]['dateTime'])):
                    self.event["end"]['dateTime']=e["end"]['dateTime']
+                   self.event['summary']+=" & "+e["summary"]
 
         return True
