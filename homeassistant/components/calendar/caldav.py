@@ -83,6 +83,7 @@ class CalDAVCalendarEventDevice(CalendarEventDevice):
         calendars = principal.calendars()
 
         for cal in calendars:
+
             if cal.name == calendar_id:
                 self.data = CalDAVCalendarData(cal, data.get(CONF_CALDAV_SENSOR_SEARCH))
 
@@ -104,7 +105,7 @@ class CalDAVCalendarData(object):
         event['start'] = dict()
         start = vevent.get('DTSTART', '').dt
         if type(start) is date:
-            event['start']['date'] = start.isoformat()
+            event['start']['dateTime'] = start.isoformat()+"T00:00:00+00:00"
         elif type(start) is datetime:
             event['start']['dateTime'] = start.isoformat()
         else:
@@ -112,7 +113,7 @@ class CalDAVCalendarData(object):
         event['end'] = dict()
         end = vevent.get('DTEND', '').dt
         if type(end) is date:
-            event['end']['date'] = end.isoformat()
+            event['end']['dateTime'] = end.isoformat()+"T23:59:59+00:00"
         elif type(end) is datetime:
             event['end']['dateTime'] = end.isoformat()
         else:
@@ -141,4 +142,13 @@ class CalDAVCalendarData(object):
 
         items=sorted(items, key=lambda i: i["start"]['dateTime'] if 'dateTime' in i["start"] else i["start"]['date'])
         self.event = items[0] if len(items) >= 1 else None
+
+        if len(items)>1:
+
+           for e in items[1:]:
+
+               if ((e["start"]['dateTime'] < self.event["end"]['dateTime'])
+               and (e["end"]['dateTime'] > self.event["end"]['dateTime'])):
+                   self.event["end"]['dateTime']=e["end"]['dateTime']
+
         return True
