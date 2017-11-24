@@ -75,6 +75,33 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                      for data in calendar[CONF_CALDAV_SENSOR] if data[CONF_CALDAV_SENSOR_TRACK]])
 
 
+def parse_duration(d):
+    import re
+    hours=0
+    minutes=0
+    seconds=0
+    pattern = r'(^PT(?P<hours>\d+)H)'
+    match = re.match(pattern, d)
+
+    if match:
+        print(match.group('hours'))
+        hours = int(match.group('hours'))
+
+    pattern = r'(^PT.*(?P<minutes>\d+)M)'
+    match = re.match(pattern, d)
+
+    if match:
+        minutes = int(match.group('minutes'))
+
+    pattern = r'(^PT.*(?P<seconds>\d+)S)'
+    match = re.match(pattern, d)
+
+    if match:
+        seconds = int(match.group('seconds'))
+    
+    return timedelta(hours=hours, minutes=minutes, seconds=seconds)
+
+
 class CalDAVCalendarEventDevice(CalendarEventDevice):
     """A calendar event device."""
 
@@ -111,7 +138,16 @@ class CalDAVCalendarData(object):
         else:
             raise ValueError('Invalid start time')
         event['end'] = dict()
-        end = vevent.get('DTEND', '').dt
+
+        try:
+            end=vevent.get('DTEND').dt
+        except:
+            try:
+                d=parse_duration(vevent.get('DURATION').to_ical().decode("UTF8"))
+                end=start+d
+            except:
+                end=(start+datetime.timedelta(days=1)).replace(hour=0,minute=0,second=0)
+
         if type(end) is date:
             event['end']['dateTime'] = end.isoformat()+"T23:59:59+00:00"
         elif type(end) is datetime:
